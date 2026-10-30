@@ -1,0 +1,587 @@
+<!-- ============================================================
+     PAGINA UNUI LOC — șablon unic, pentru toate locurile.
+     Se lipește într-un element "Embed" pe pagina ascunsă "loc".
+     Înlocuiește COMPLET codul vechi.
+
+     Fonturile, mărimea scrisului și textele fixe vin din
+     admin → fila "Aspect site". Nu trebuie modificate aici.
+     ============================================================ -->
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600;700&family=Caveat:wght@500;700&family=Kalam:wght@400;700&family=Patrick+Hand&family=Lora:ital,wght@0,400;0,600;1,400&family=Source+Sans+3:wght@400;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css">
+
+<style>
+  #pagina-loc{
+    --mv-accent: 'Dancing Script', Georgia, serif;
+    --mv-text: 'Lora', Georgia, serif;
+    --mv-s: 1.15;
+    max-width:760px;margin:0 auto;padding:20px;color:#1F3A5F;
+    font-family:var(--mv-text);
+  }
+  #pagina-loc .mv-accent{font-family:var(--mv-accent);}
+  #pagina-loc .mv-nume{font-size:calc(36px * var(--mv-s));font-weight:700;line-height:1.15;margin:0 0 22px;}
+  #pagina-loc .mv-cartier{font-size:calc(15px * var(--mv-s));color:#5B6B75;}
+  #pagina-loc .mv-eticheta{color:#FFF8EE;font-size:calc(12px * var(--mv-s));font-weight:700;padding:5px 13px;border-radius:14px;letter-spacing:.03em;}
+  #pagina-loc .mv-poveste{font-size:calc(17px * var(--mv-s));line-height:1.75;color:#2A3F4F;white-space:pre-line;}
+  #pagina-loc .mv-casuta-titlu{font-size:calc(14px * var(--mv-s));font-weight:700;color:#5B6B75;margin-bottom:6px;}
+  #pagina-loc .mv-casuta-text{font-size:calc(16px * var(--mv-s));line-height:1.6;color:#333;}
+  #pagina-loc .mv-semnatura{font-size:calc(24px * var(--mv-s));font-weight:600;color:#A6431F;text-align:right;margin-top:26px;}
+  #pagina-loc .mv-mesaj{font-size:calc(16px * var(--mv-s));}
+  #pagina-loc .mv-titlu-mesaj{font-size:calc(30px * var(--mv-s));font-weight:700;color:#1F3A5F;margin-bottom:10px;}
+  #pagina-loc .mv-buton{display:inline-block;border:1.5px solid #1F3A5F;color:#1F3A5F;padding:11px 24px;border-radius:8px;text-decoration:none;font-size:calc(15px * var(--mv-s));}
+  #pagina-loc .mv-thumb{width:80px;height:80px;object-fit:cover;border-radius:8px;cursor:pointer;flex:0 0 auto;opacity:.7;}
+  #pagina-loc .mv-thumb.activ{outline:3px solid #B8860B;opacity:1;}
+</style>
+
+<div id="pagina-loc">
+  <div id="loc-incarcare" data-i18n="incarcare" class="mv-mesaj" style="text-align:center;padding:60px;color:#5B6B75;">Se încarcă...</div>
+
+  <div id="loc-negasit" style="display:none;text-align:center;padding:60px 20px;color:#5B6B75;">
+    <div class="mv-titlu-mesaj mv-accent" data-i18n="negasitTitlu">Locul nu a fost găsit</div>
+    <div class="mv-mesaj" data-i18n="negasitText" style="margin-bottom:22px;">Poate nu a fost încă aprobat sau linkul e incomplet.</div>
+    <a href="https://memoriavies1.com/povesti" target="_top" rel="noopener" class="mv-buton" data-i18n="vezi">Vezi poveștile</a>
+    <div id="loc-motiv" style="margin-top:22px;font-size:12px;color:#9AA5AD;"></div>
+  </div>
+
+  <div id="loc-continut" style="display:none;">
+    <div id="loc-galerie-wrap" style="margin-bottom:14px;"></div>
+    <div id="loc-thumbs" style="display:flex;gap:8px;margin-bottom:22px;overflow-x:auto;padding:3px;"></div>
+
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;flex-wrap:wrap;">
+      <div id="loc-categorie" class="mv-eticheta"></div>
+      <div id="loc-cartier" class="mv-cartier"></div>
+    </div>
+    <h1 id="loc-nume" class="mv-nume mv-accent"></h1>
+
+    <div id="loc-video-bloc" style="display:none;margin-bottom:26px;">
+      <div id="loc-video-wrap" style="position:relative;width:min(1100px, calc(100vw - 24px));left:50%;transform:translateX(-50%);aspect-ratio:16/9;border-radius:14px;overflow:hidden;background:#000;">
+      </div>
+      <div style="text-align:center;margin-top:12px;">
+        <a id="loc-video-hd" href="#" target="_blank" rel="noopener" data-i18n="videoHD" style="display:inline-flex;align-items:center;min-height:44px;padding:10px 20px;border-radius:22px;background:#1F3A5F;color:#F2EEE4;font-weight:700;text-decoration:none;font-size:15px;">Vezi pe YouTube în HD</a>
+      </div>
+    </div>
+
+    <div id="loc-poveste" class="mv-poveste"></div>
+    <div id="loc-autor-wrap" class="mv-semnatura mv-accent" style="display:none;"></div>
+
+    <div id="loc-imbunatatiri-wrap" style="display:none;margin-top:28px;padding:16px 18px;background:#F2EEE4;border-radius:10px;">
+      <div id="t-imbunatatiri" data-i18n="imbunatatiriTitlu" class="mv-casuta-titlu">Ce s-ar putea îmbunătăți</div>
+      <div id="loc-imbunatatiri" class="mv-casuta-text"></div>
+    </div>
+
+    <div id="loc-harta-wrap" style="display:none;margin-top:28px;">
+      <div id="t-harta-mica" data-i18n="hartaMicaTitlu" class="mv-casuta-titlu">Unde găsești locul</div>
+      <div id="loc-harta" style="height:230px;border-radius:12px;overflow:hidden;"></div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script>
+// ============================================================
+// LIMBA ACESTUI COD: 'ro' pe paginile în română, 'en' pe cele în engleză.
+// (Fișierul _EN are deja 'en' — nu trebuie modificat nimic.)
+// ============================================================
+var LIMBA = 'ro';
+var PREFIX_EN = '/en';
+var SUF = LIMBA === 'en' ? 'En' : '';
+var EN = {
+  "videoHD": "Watch on YouTube in HD",
+  "incarcare": "Loading...",
+  "negasitTitlu": "Place not found",
+  "negasitText": "It may not have been approved yet, or the link is incomplete.",
+  "vezi": "See the stories",
+  "imbunatatiriTitlu": "What could be improved",
+  "hartaMicaTitlu": "Where to find it",
+  "semnatura": "Story shared by",
+  "comunitate": "Community",
+  "istoric": "History",
+  "elevi": "Students",
+  "cartier": "neighbourhood",
+  "doarRo": "This story was sent in Romanian and has not been translated yet.",
+  "motivId": "Reason: the place id could not be read from the address.",
+  "motivLipsa": "Reason: none of the published places has the id ",
+  "motivEroare": "Reason: error reading the database ",
+  "titluSite": "The Living Memory of the Neighbourhoods of Sector 1",
+  "poza": "Photo "
+};
+function tr(ro, cheie){ return (LIMBA === 'en' && EN[cheie] !== undefined) ? EN[cheie] : ro; }
+function urlSite(cale){ return 'https://memoriavies1.com' + (LIMBA === 'en' ? PREFIX_EN : '') + cale; }
+(function(){
+  if (LIMBA !== 'en') return;
+  try { document.documentElement.lang = 'en'; } catch(e) {}
+  Array.prototype.forEach.call(document.querySelectorAll('[data-t],[data-i18n]'), function(el){
+    var k = el.getAttribute('data-t') || el.getAttribute('data-i18n');
+    if (EN[k] !== undefined) el.textContent = EN[k];
+  });
+  Array.prototype.forEach.call(document.querySelectorAll('[data-i18n-ph]'), function(el){
+    var k = el.getAttribute('data-i18n-ph'); if (EN[k] !== undefined) el.setAttribute('placeholder', EN[k]);
+  });
+  Array.prototype.forEach.call(document.querySelectorAll('a[href^="https://memoriavies1.com/"]'), function(a){
+    a.href = a.href.replace('https://memoriavies1.com/', 'https://memoriavies1.com' + PREFIX_EN + '/');
+  });
+})();
+
+</script>
+<script>
+(function(){
+  var firebaseConfig = {
+    apiKey: "AIzaSyAo3nNB04FsZkq0tiKelx4hPD4v1vZbGGk",
+    authDomain: "memoriavies1.firebaseapp.com",
+    projectId: "memoriavies1",
+    storageBucket: "memoriavies1.firebasestorage.app",
+    messagingSenderId: "52179319140",
+    appId: "1:52179319140:web:a8e85c564cc8a68084a271"
+  };
+  if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
+  var db = firebase.firestore();
+
+  var culori = { comunitate: "#1F3A5F", istoric: "#A6431F", elevi: "#B8860B" };
+  var etichete = { comunitate: tr("Comunitate","comunitate"), istoric: tr("Istoric","istoric"), elevi: tr("Elevi","elevi") };
+  var SCARA = { normal: 1, mare: 1.15, foarte_mare: 1.3 };
+  var aspect = { semnatura: tr('Poveste trimisă de','semnatura') };
+  var radacina = document.getElementById('pagina-loc');
+
+  // ---------- aspect din admin (fonturi, mărime, texte) ----------
+  db.collection('setari').doc('aspect').get().then(function(doc){
+    if (!doc.exists) return;
+    var a = doc.data();
+    if (a.fontAccent) radacina.style.setProperty('--mv-accent', "'" + a.fontAccent + "', Georgia, serif");
+    if (a.fontText) radacina.style.setProperty('--mv-text', "'" + a.fontText + "', Georgia, serif");
+    if (SCARA[a.marime]) radacina.style.setProperty('--mv-s', SCARA[a.marime]);
+    function fontPentru(cheie, el){ var f = a[cheie + 'Font']; if (el && typeof f === 'string' && f.trim()) el.style.fontFamily = "'" + f + "', Georgia, serif"; }
+    fontPentru('imbunatatiriTitlu', document.getElementById('t-imbunatatiri'));
+    fontPentru('hartaMicaTitlu', document.getElementById('t-harta-mica'));
+    fontPentru('semnatura', document.getElementById('loc-autor-wrap'));
+    if (a['imbunatatiriTitlu'+SUF]) document.getElementById('t-imbunatatiri').textContent = a['imbunatatiriTitlu'+SUF];
+    if (a['hartaMicaTitlu'+SUF]) document.getElementById('t-harta-mica').textContent = a['hartaMicaTitlu'+SUF];
+    if (a['semnatura'+SUF]) { aspect.semnatura = a['semnatura'+SUF]; actualizeazaSemnatura(); }
+  }).catch(function(err){ console.warn('[pagina loc] setări aspect indisponibile, folosesc varianta de bază', err); });
+
+  var autorCurent = null;
+  function actualizeazaSemnatura(){
+    if (!autorCurent) return;
+    var el = document.getElementById('loc-autor-wrap');
+    el.textContent = aspect.semnatura + ' ' + autorCurent;
+    el.style.display = 'block';
+  }
+
+  // ---------- id-ul locului (merge și în iframe-ul Hostinger) ----------
+  function citesteId(){
+    var surse = [
+      function(){ return new URLSearchParams(window.location.search).get('id'); },
+      function(){ return new URLSearchParams(window.top.location.search).get('id'); },
+      function(){ return new URLSearchParams(window.parent.location.search).get('id'); },
+      function(){ return document.referrer ? new URL(document.referrer).searchParams.get('id') : null; },
+      function(){ return localStorage.getItem('memoriavie_loc_id'); }
+    ];
+    for (var i = 0; i < surse.length; i++) {
+      try { var v = surse[i](); if (v) return v; } catch(e) {}
+    }
+    return null;
+  }
+  var id = citesteId();
+
+  function arata(sectiune){
+    ['loc-incarcare','loc-negasit','loc-continut'].forEach(function(s){ document.getElementById(s).style.display = 'none'; });
+    document.getElementById(sectiune).style.display = 'block';
+  }
+  function negasit(motiv){
+    document.getElementById('loc-motiv').textContent = motiv;
+    console.warn('[pagina loc] ' + motiv);
+    arata('loc-negasit');
+  }
+  function youtubeEmbedURL(input){
+    if (!input) return null;
+    var m = input.match(/(?:youtu\.be\/|v=|embed\/|shorts\/)([A-Za-z0-9_-]{6,})/);
+    var vid = m ? m[1] : (/^[A-Za-z0-9_-]{6,}$/.test(input) ? input : null);
+    // pornește singur, fără sunet, și se repetă; sunetul se poate porni din player
+    return vid ? 'https://www.youtube.com/embed/' + vid + '?autoplay=1&mute=1&loop=1&playlist=' + vid + '&playsinline=1&rel=0' : null;
+  }
+  function setupGalerie(poze){
+    var wrap = document.getElementById('loc-galerie-wrap');
+    var thumbs = document.getElementById('loc-thumbs');
+    wrap.innerHTML = ''; thumbs.innerHTML = '';
+    if (!poze.length) return;
+    var main = document.createElement('img');
+    main.src = poze[0]; main.alt = '';
+    main.style.cssText = 'width:100%;max-height:460px;object-fit:cover;border-radius:14px;display:block;';
+    wrap.appendChild(main);
+    if (poze.length < 2) return;
+    poze.forEach(function(url, idx){
+      var t = document.createElement('img');
+      t.src = url; t.alt = tr('Poza ','poza') + (idx + 1);
+      t.className = 'mv-thumb' + (idx === 0 ? ' activ' : '');
+      t.onclick = function(){
+        main.src = url;
+        Array.prototype.forEach.call(thumbs.children, function(c){ c.classList.remove('activ'); });
+        t.classList.add('activ');
+      };
+      thumbs.appendChild(t);
+    });
+  }
+
+  if (!id) { negasit(tr('Motiv: id-ul locului nu a putut fi citit din adresă.','motivId')); return; }
+
+  // Citim ca harta: lista locurilor publicate, apoi îl alegem pe cel cerut
+  db.collection('locuri').where('stare', '==', 'publicat').get().then(function(snapshot){
+    var doc = null;
+    snapshot.forEach(function(x){ if (x.id === id) doc = x; });
+    if (!doc) { negasit(LIMBA === 'en' ? EN.motivLipsa + id + '.' : 'Motiv: printre cele ' + snapshot.size + ' locuri publicate nu există id-ul ' + id + '.'); return; }
+    var d = doc.data();
+
+    var poze = Array.isArray(d.poze) && d.poze.length ? d.poze : (d.fotoURL ? [d.fotoURL] : []);
+    setupGalerie(poze);
+
+    var cat = document.getElementById('loc-categorie');
+    if (etichete[d.categorie]) { cat.textContent = etichete[d.categorie]; cat.style.background = culori[d.categorie]; }
+    else cat.style.display = 'none';
+
+    var titlu = (d.nume || 'Loc') + ' — ' + tr('Memoria vie a cartierelor din Sectorul 1','titluSite');
+    try { document.title = titlu; } catch(e) {}
+    try { window.top.document.title = titlu; } catch(e) {}
+
+    document.getElementById('loc-cartier').textContent = d.cartier ? (LIMBA === 'en' ? d.cartier + ' ' + EN.cartier : 'Cartier ' + d.cartier) : '';
+    document.getElementById('loc-nume').textContent = d.nume || '';
+    var povesteEn = LIMBA === 'en' && d.povesteEn && d.povesteEn.trim() ? d.povesteEn : '';
+    document.getElementById('loc-poveste').textContent = povesteEn || d.povesteRescrisa || d.poveste || '';
+    if (LIMBA === 'en' && !povesteEn && (d.povesteRescrisa || d.poveste)) {
+      var nota = document.createElement('div');
+      nota.style.cssText = 'font-size:13px;color:#8C7A55;font-style:italic;margin-bottom:10px;';
+      nota.textContent = EN.doarRo;
+      var pv = document.getElementById('loc-poveste'); pv.parentNode.insertBefore(nota, pv);
+    }
+
+    var mp4Link = /^https:\/\/\S+\.mp4(\?\S*)?$/i.test(String(d.videoYoutube || '').trim()) ? String(d.videoYoutube).trim() : '';
+    if (mp4Link) {
+      document.getElementById('loc-video-bloc').style.display = 'block';
+      var hdA = document.getElementById('loc-video-hd'); if (hdA) hdA.style.display = 'none';
+      var pornesteMp4 = function(){ if (window.MVHD) MVHD.player(document.getElementById('loc-video-wrap'), mp4Link, { autoplay: true, muted: true, loop: true, titlu: d.nume || '' }); else setTimeout(pornesteMp4, 100); };
+      pornesteMp4();
+    }
+    var videoURL = mp4Link ? null : youtubeEmbedURL(d.videoYoutube);
+    if (videoURL) {
+      document.getElementById('loc-video-bloc').style.display = 'block';
+      var vidHD = (videoURL.match(/embed\/([A-Za-z0-9_-]+)/) || [])[1];
+      if (vidHD) {
+        document.getElementById('loc-video-hd').href = 'https://www.youtube.com/watch?v=' + vidHD;
+        var porneste = function(){ if (window.MVHD) MVHD.player(document.getElementById('loc-video-wrap'), vidHD, { autoplay: true, muted: true, loop: true, titlu: d.nume || '' }); else setTimeout(porneste, 100); };
+        porneste();
+      }
+    }
+    var imbText = (LIMBA === 'en' && d.imbunatatiriEn && d.imbunatatiriEn.trim()) ? d.imbunatatiriEn : d.imbunatatiri;
+    if (imbText) {
+      document.getElementById('loc-imbunatatiri').textContent = imbText;
+      document.getElementById('loc-imbunatatiri-wrap').style.display = 'block';
+    }
+    if (d.doreșteApareCaAutor && d.numeAutor) { autorCurent = d.numeAutor; actualizeazaSemnatura(); }
+
+    arata('loc-continut');
+    try { if (window.mvNumara) mvNumara('loc_' + id); } catch(e) {}
+
+    var lat = parseFloat(d.lat), lng = parseFloat(d.lng);
+    if (!isNaN(lat) && !isNaN(lng) && window.L) {
+      document.getElementById('loc-harta-wrap').style.display = 'block';
+      var map = L.map('loc-harta', { zoomControl: false, dragging: false, scrollWheelZoom: false }).setView([lat, lng], 15);
+      L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', { attribution: 'Esri' }).addTo(map);
+      L.marker([lat, lng]).addTo(map);
+      setTimeout(function(){ map.invalidateSize(); }, 200);
+    }
+  }).catch(function(err){
+    console.error('[pagina loc] eroare Firebase:', err);
+    negasit(tr('Motiv: eroare la citirea din baza de date ','motivEroare') + '(' + (err && err.code ? err.code : '?') + ').');
+  });
+})();
+</script>
+
+<!-- ============================================================
+     CONTOR DE VIZITE (fără cookie-uri, nu salvează nimic despre vizitator,
+     doar numără). Cifrele apar în admin, la fila „Raport”.
+     ============================================================ -->
+<script>
+(function(){
+  function zi(){ var d=new Date(); return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2); }
+  function inc(k){ try{ firebase.firestore().collection('statistici').doc(k).set({ n: firebase.firestore.FieldValue.increment(1) }, { merge:true }).catch(function(){}); }catch(e){} }
+  function odata(k){ try{ if (sessionStorage.getItem('mv_'+k)) return false; sessionStorage.setItem('mv_'+k,'1'); }catch(e){} return true; }
+  function gata(){ return window.firebase && firebase.apps && firebase.apps.length; }
+  window.mvInc = function(cheie){ if (gata()) inc(cheie); };
+  window.mvNumara = function(cheie){ if (gata() && odata(cheie)) inc(cheie); };
+  window.mvVizita = function(pagina){
+    if (!gata()) return;
+    if (window.LIMBA === 'en') pagina += '_en';
+    if (odata('vizitator')) { inc('vizitatori'); inc('vizitatori_' + zi()); }
+    inc('pag_' + pagina); inc('afisari_' + zi());   // afișare de pagină: se numără la fiecare încărcare
+  };
+  mvVizita('loc');
+})();
+</script>
+
+<script>
+/* ============================================================
+   MVHD — videoclipuri YouTube în calitate mare pe Memoria vie.
+   Playerul YouTube e încărcat în spate la 1920×1080 (filme cu sunet)
+   sau 1280×720 (previzualizări fără sunet) și micșorat doar vizual,
+   ca YouTube să trimită calitate HD. Butoanele sunt ale noastre.
+   ============================================================ */
+window.MVHD = window.MVHD || (function(){
+  var TXT_EN = { play: 'Play', pauza: 'Pause', sunet: 'Sound on', fara: 'Mute', ecran: 'Full screen' };
+  var TXT_RO = { play: 'Pornește', pauza: 'Pauză', sunet: 'Pornește sunetul', fara: 'Oprește sunetul', ecran: 'Pe tot ecranul' };
+  var TXT = new Proxy({}, { get: function(o, k){ return (window.LIMBA === 'en' ? TXT_EN : TXT_RO)[k]; } });
+  var MARE = [1920, 1080], PREVIZ = [1280, 720];
+
+  // ---------- filme găzduite de noi, mereu 1080p (au prioritate față de YouTube) ----------
+  var MP4_BAZA = 'https://purcaru94-star.github.io/memoria-vie-video/';
+  var MP4 = window.MVHD_MP4 || {
+    'vbR5GdC3b_c': 'grupaj-dorobanti-final',
+    'B4hsEnRZiMk': 'bunica',
+    'EmmhTOvXxZc': 'doamna-din-padure',
+    'h66-Cf2CFDc': 'sebastian-grecu'
+  };
+  function mp4De(id){
+    id = String(id || '');
+    if (/^https:\/\/.+\.mp4(\?|$)/i.test(id)) return { src: id, poster: id.replace(/\.mp4(\?.*)?$/i, '.jpg') };
+    var n = MP4[id]; if (!n) return null;
+    return { src: MP4_BAZA + n + '.mp4', poster: MP4_BAZA + n + '.jpg' };
+  }
+
+  var css = document.createElement('style');
+  css.textContent =
+    '.mvhd-box{position:relative;overflow:hidden;background:#000;}' +
+    '.mvhd-in{position:absolute;left:0;top:0;transform-origin:0 0;}' +
+    '.mvhd-in iframe{display:block;width:100%;height:100%;border:0;}' +
+    '.mvhd-clic{position:absolute;inset:0;cursor:pointer;background:transparent;border:0;padding:0;}' +
+    '.mvhd-bara{position:absolute;left:0;right:0;bottom:0;display:flex;align-items:center;gap:6px;padding:8px 10px;background:linear-gradient(transparent,rgba(0,0,0,.72));opacity:1;transition:opacity .3s;}' +
+    '.mvhd-box.mvhd-ruleaza:not(:hover):not(.mvhd-fara-sunet) .mvhd-bara{opacity:0;}' +
+    '@media (hover:none){.mvhd-box .mvhd-bara{opacity:1 !important;}}' +
+    '.mvhd-bara button,.mvhd-bara a{min-width:44px;height:44px;border-radius:22px;border:0;background:rgba(255,255,255,.16);color:#fff;font:700 13px/1 system-ui,sans-serif;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0 12px;text-decoration:none;}' +
+    '.mvhd-bara button:hover,.mvhd-bara a:hover{background:rgba(255,255,255,.3);}' +
+    '.mvhd-bara svg{width:20px;height:20px;fill:#fff;}' +
+    '.mvhd-timp{flex:1;min-width:60px;height:44px;display:flex;align-items:center;}' +
+    '.mvhd-timp input{width:100%;accent-color:#C2562A;cursor:pointer;}' +
+    '.mvhd-ora{color:#fff;font:12px system-ui,sans-serif;white-space:nowrap;}' +
+    '.mvhd-calit{color:#fff;font:700 11px system-ui,sans-serif;background:rgba(255,255,255,.18);border-radius:6px;padding:3px 6px;white-space:nowrap;}' +
+    '.mvhd-calit:empty{display:none;}' +
+    '.mvhd-mare{position:absolute;left:50%;top:50%;width:74px;height:74px;margin:-37px 0 0 -37px;border-radius:50%;background:rgba(194,86,42,.92);border:0;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(0,0,0,.35);}' +
+    '.mvhd-mare svg{width:30px;height:30px;fill:#fff;margin-left:4px;}' +
+    '.mvhd-box.mvhd-ruleaza .mvhd-mare{display:none;}' +
+    '.mvhd-box:fullscreen{width:100vw;height:100vh;}' +
+    '@media (max-width:600px){.mvhd-ora{display:none;}.mvhd-bara{gap:4px;padding:6px;}}';
+  document.head.appendChild(css);
+
+  var I = {
+    play: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>',
+    pauza: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5h4v14H6zm8 0h4v14h-4z"/></svg>',
+    sunet: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3A4.5 4.5 0 0 0 14 8v8a4.5 4.5 0 0 0 2.5-4z"/></svg>',
+    fara: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9v6h4l5 5V4L7 9H3zm18.7 1.3-1.4-1.4L18 11.2l-2.3-2.3-1.4 1.4 2.3 2.3-2.3 2.3 1.4 1.4 2.3-2.3 2.3 2.3 1.4-1.4-2.3-2.3z"/></svg>',
+    ecran: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>'
+  };
+
+  function potrivire(box, inner, dim, cover){
+    function f(){
+      var w = box.clientWidth, h = box.clientHeight; if (!w || !h) return;
+      var s = cover ? Math.max(w / dim[0], h / dim[1]) : Math.min(w / dim[0], h / dim[1]);
+      inner.style.transform = 'translate(' + ((w - dim[0] * s) / 2) + 'px,' + ((h - dim[1] * s) / 2) + 'px) scale(' + s + ')';
+    }
+    f();
+    if (window.ResizeObserver) new ResizeObserver(f).observe(box); else window.addEventListener('resize', f);
+    document.addEventListener('fullscreenchange', function(){ setTimeout(f, 60); });
+    return f;
+  }
+  function interior(box, dim, cover){
+    box.classList.add('mvhd-box');
+    if (getComputedStyle(box).position === 'static') box.style.position = 'relative';
+    var inner = document.createElement('div'); inner.className = 'mvhd-in';
+    inner.style.width = dim[0] + 'px'; inner.style.height = dim[1] + 'px';
+    box.appendChild(inner); potrivire(box, inner, dim, cover);
+    return inner;
+  }
+
+  // ---------- previzualizare fără sunet, fără butoane (hartă, panou) ----------
+  function mut(box, id, cover){
+    if (box._mvhd) return; box._mvhd = 1;
+    var m4 = mp4De(id);
+    if (m4) {
+      box.classList.add('mvhd-box');
+      if (getComputedStyle(box).position === 'static') box.style.position = 'relative';
+      var v = document.createElement('video');
+      v.muted = true; v.loop = true; v.playsInline = true; v.setAttribute('playsinline', ''); v.setAttribute('muted', '');
+      v.preload = 'metadata'; v.poster = m4.poster; v.src = m4.src;
+      v.setAttribute('aria-hidden', 'true'); v.tabIndex = -1;
+      v.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:' + (cover ? 'cover' : 'contain') + ';pointer-events:none;';
+      box.appendChild(v);
+      var joaca = function(on){ if (on) { var pr = v.play(); if (pr && pr.catch) pr.catch(function(){}); } else v.pause(); };
+      if (window.IntersectionObserver) new IntersectionObserver(function(es){ es.forEach(function(e){ joaca(e.isIntersecting); }); }, { threshold: 0.25 }).observe(box);
+      else joaca(true);
+      return;
+    }
+    var inner = interior(box, PREVIZ, cover);
+    var f = document.createElement('iframe');
+    f.src = 'https://www.youtube-nocookie.com/embed/' + id + '?autoplay=1&mute=1&loop=1&playlist=' + id + '&controls=0&playsinline=1&rel=0&modestbranding=1&disablekb=1&iv_load_policy=3&vq=hd720';
+    f.setAttribute('allow', 'autoplay; encrypted-media'); f.setAttribute('tabindex', '-1'); f.setAttribute('aria-hidden', 'true'); f.title = '';
+    f.style.pointerEvents = 'none';
+    inner.appendChild(f);
+  }
+
+  // ---------- API YouTube ----------
+  var asteptare = [];
+  function api(cb){
+    if (window.YT && window.YT.Player) return cb();
+    asteptare.push(cb);
+    if (api.pornit) return; api.pornit = 1;
+    var vechi = window.onYouTubeIframeAPIReady;
+    window.onYouTubeIframeAPIReady = function(){ if (vechi) try { vechi(); } catch(e){} asteptare.splice(0).forEach(function(f){ f(); }); };
+    var s = document.createElement('script'); s.src = 'https://www.youtube.com/iframe_api'; document.head.appendChild(s);
+  }
+  function ora(t){ t = Math.max(0, Math.floor(t || 0)); return Math.floor(t / 60) + ':' + ('0' + (t % 60)).slice(-2); }
+
+  // ---------- player cu sunet și butoanele noastre ----------
+  // opt: { autoplay, muted, loop, titlu }
+  function player(box, id, opt){
+    opt = opt || {};
+    if (box._mvhdP) return box._mvhdP;
+    if (mp4De(id)) return playerMp4(box, id, opt);
+    box.innerHTML = '';
+    var inner = interior(box, MARE, false);
+    var slot = document.createElement('div'); inner.appendChild(slot);
+    var clic = document.createElement('button'); clic.type = 'button'; clic.className = 'mvhd-clic'; clic.setAttribute('aria-label', TXT.play + (opt.titlu ? ': ' + opt.titlu : ''));
+    var mare = document.createElement('button'); mare.type = 'button'; mare.className = 'mvhd-mare'; mare.setAttribute('aria-label', TXT.play); mare.innerHTML = I.play;
+    var bara = document.createElement('div'); bara.className = 'mvhd-bara';
+    bara.innerHTML =
+      '<button type="button" data-a="play" aria-label="' + TXT.play + '">' + I.play + '</button>' +
+      '<div class="mvhd-timp"><input type="range" min="0" max="1000" value="0" step="1" aria-label="Poziție"></div>' +
+      '<span class="mvhd-ora">0:00 / 0:00</span>' +
+      '<span class="mvhd-calit" title="Calitatea trimisă acum de YouTube"></span>' +
+      '<button type="button" data-a="sunet" aria-label="' + TXT.fara + '">' + I.sunet + '</button>' +
+      '<button type="button" data-a="ecran" aria-label="' + TXT.ecran + '">' + I.ecran + '</button>' +
+      '<a href="https://www.youtube.com/watch?v=' + id + '" target="_blank" rel="noopener" aria-label="YouTube HD">HD</a>';
+    box.appendChild(clic); box.appendChild(mare); box.appendChild(bara);
+    var bPlay = bara.querySelector('[data-a="play"]'), bSunet = bara.querySelector('[data-a="sunet"]'), bEcran = bara.querySelector('[data-a="ecran"]');
+    var cursor = bara.querySelector('input'), eticheta = bara.querySelector('.mvhd-ora'), calit = bara.querySelector('.mvhd-calit');
+    var CAL = { tiny: '144p', small: '240p', medium: '360p', large: '480p', hd720: '720p', hd1080: '1080p', hd1440: '1440p', hd2160: '4K', highres: '4K+' };
+    var p = null, gata = false, trage = false, muted = !!opt.muted, timer = null;
+
+    function stareSunet(){ box.classList.toggle('mvhd-fara-sunet', muted); bSunet.innerHTML = muted ? I.fara : I.sunet; bSunet.setAttribute('aria-label', muted ? TXT.sunet : TXT.fara); }
+    function stareRuleaza(r){ box.classList.toggle('mvhd-ruleaza', r); bPlay.innerHTML = r ? I.pauza : I.play; bPlay.setAttribute('aria-label', r ? TXT.pauza : TXT.play); }
+    function comuta(){ if (!gata) return; var s = p.getPlayerState(); if (s === 1 || s === 3) p.pauseVideo(); else p.playVideo(); }
+    stareSunet();
+    clic.addEventListener('click', comuta); mare.addEventListener('click', comuta); bPlay.addEventListener('click', comuta);
+    bSunet.addEventListener('click', function(){ if (!gata) return; if (muted) { p.unMute(); p.setVolume(100); } else p.mute(); muted = !muted; stareSunet(); });
+    bEcran.addEventListener('click', function(){
+      if (document.fullscreenElement) { document.exitFullscreen(); return; }
+      var cere = box.requestFullscreen || box.webkitRequestFullscreen;
+      if (cere) { try { var r = cere.call(box); if (r && r.catch) r.catch(function(){ window.open('https://www.youtube.com/watch?v=' + id, '_blank'); }); } catch(e){ window.open('https://www.youtube.com/watch?v=' + id, '_blank'); } }
+      else window.open('https://www.youtube.com/watch?v=' + id, '_blank');
+    });
+    cursor.addEventListener('input', function(){ trage = true; });
+    cursor.addEventListener('change', function(){ if (gata) p.seekTo(p.getDuration() * cursor.value / 1000, true); trage = false; });
+
+    api(function(){
+      p = new YT.Player(slot, {
+        host: 'https://www.youtube-nocookie.com', videoId: id, width: MARE[0], height: MARE[1],
+        playerVars: { vq: 'hd1080', autoplay: opt.autoplay ? 1 : 0, mute: muted ? 1 : 0, controls: 0, rel: 0, playsinline: 1, modestbranding: 1, iv_load_policy: 3, disablekb: 1, loop: opt.loop ? 1 : 0, playlist: opt.loop ? id : undefined },
+        events: {
+          onReady: function(){
+            gata = true;
+            try { var f = p.getIframe(); f.setAttribute('tabindex', '-1'); f.style.pointerEvents = 'none'; } catch(e){}
+            if (muted) p.mute();
+            if (opt.autoplay) p.playVideo();
+            timer = setInterval(function(){
+              if (!gata) return; var d = p.getDuration() || 0, t = p.getCurrentTime() || 0;
+              if (!trage && d) cursor.value = Math.round(1000 * t / d);
+              eticheta.textContent = ora(t) + ' / ' + ora(d);
+              try { var q = p.getPlaybackQuality && p.getPlaybackQuality(); calit.textContent = CAL[q] || ''; } catch(e){}
+            }, 500);
+          },
+          onStateChange: function(e){ stareRuleaza(e.data === 1 || e.data === 3); }
+        }
+      });
+    });
+    box._mvhdP = { opreste: function(){ if (gata) p.pauseVideo(); } };
+    return box._mvhdP;
+  }
+
+
+  // ---------- player pentru filmele noastre (mp4 1080p), aceleași butoane ----------
+  function playerMp4(box, id, opt){
+    var m4 = mp4De(id);
+    box.innerHTML = '';
+    box.classList.add('mvhd-box');
+    if (getComputedStyle(box).position === 'static') box.style.position = 'relative';
+    var v = document.createElement('video');
+    v.playsInline = true; v.setAttribute('playsinline', ''); v.preload = 'auto';
+    v.poster = m4.poster; v.src = m4.src; v.loop = !!opt.loop;
+    v.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000;';
+    var clic = document.createElement('button'); clic.type = 'button'; clic.className = 'mvhd-clic'; clic.setAttribute('aria-label', TXT.play + (opt.titlu ? ': ' + opt.titlu : ''));
+    var mare = document.createElement('button'); mare.type = 'button'; mare.className = 'mvhd-mare'; mare.setAttribute('aria-label', TXT.play); mare.innerHTML = I.play;
+    var bara = document.createElement('div'); bara.className = 'mvhd-bara';
+    bara.innerHTML =
+      '<button type="button" data-a="play" aria-label="' + TXT.play + '">' + I.play + '</button>' +
+      '<div class="mvhd-timp"><input type="range" min="0" max="1000" value="0" step="1" aria-label="Poziție"></div>' +
+      '<span class="mvhd-ora">0:00 / 0:00</span>' +
+      '<span class="mvhd-calit"></span>' +
+      '<button type="button" data-a="sunet" aria-label="' + TXT.fara + '">' + I.sunet + '</button>' +
+      '<button type="button" data-a="ecran" aria-label="' + TXT.ecran + '">' + I.ecran + '</button>';
+    box.appendChild(v); box.appendChild(clic); box.appendChild(mare); box.appendChild(bara);
+    var bPlay = bara.querySelector('[data-a="play"]'), bSunet = bara.querySelector('[data-a="sunet"]'), bEcran = bara.querySelector('[data-a="ecran"]');
+    var cursor = bara.querySelector('input'), eticheta = bara.querySelector('.mvhd-ora'), calit = bara.querySelector('.mvhd-calit');
+    var trage = false, muted = !!opt.muted; v.muted = muted;
+    function stareSunet(){ box.classList.toggle('mvhd-fara-sunet', muted); bSunet.innerHTML = muted ? I.fara : I.sunet; bSunet.setAttribute('aria-label', muted ? TXT.sunet : TXT.fara); }
+    function stareRuleaza(){ var r = !v.paused && !v.ended; box.classList.toggle('mvhd-ruleaza', r); bPlay.innerHTML = r ? I.pauza : I.play; bPlay.setAttribute('aria-label', r ? TXT.pauza : TXT.play); }
+    function porneste(){ var pr = v.play(); if (pr && pr.catch) pr.catch(function(){ if (!v.muted) { v.muted = muted = true; stareSunet(); v.play().catch(function(){}); } }); }
+    function comuta(){ if (v.paused || v.ended) porneste(); else v.pause(); }
+    stareSunet();
+    clic.addEventListener('click', comuta); mare.addEventListener('click', comuta); bPlay.addEventListener('click', comuta);
+    bSunet.addEventListener('click', function(){ muted = !muted; v.muted = muted; if (!muted) v.volume = 1; stareSunet(); });
+    bEcran.addEventListener('click', function(){
+      if (document.fullscreenElement) { document.exitFullscreen(); return; }
+      var cere = box.requestFullscreen || box.webkitRequestFullscreen;
+      if (cere) { try { var r = cere.call(box); if (r && r.catch) r.catch(function(){ if (v.webkitEnterFullscreen) v.webkitEnterFullscreen(); }); } catch(e){ if (v.webkitEnterFullscreen) v.webkitEnterFullscreen(); } }
+      else if (v.webkitEnterFullscreen) v.webkitEnterFullscreen();
+    });
+    cursor.addEventListener('input', function(){ trage = true; });
+    cursor.addEventListener('change', function(){ if (v.duration) v.currentTime = v.duration * cursor.value / 1000; trage = false; });
+    ['play','pause','ended','playing'].forEach(function(e){ v.addEventListener(e, stareRuleaza); });
+    v.addEventListener('timeupdate', function(){ var d = v.duration || 0, t = v.currentTime || 0; if (!trage && d) cursor.value = Math.round(1000 * t / d); eticheta.textContent = ora(t) + ' / ' + ora(d); });
+    v.addEventListener('loadedmetadata', function(){ eticheta.textContent = ora(0) + ' / ' + ora(v.duration); if (v.videoHeight) calit.textContent = v.videoHeight + 'p'; });
+    if (opt.autoplay) porneste();
+    box._mvhdP = { opreste: function(){ v.pause(); } };
+    return box._mvhdP;
+  }
+
+  // ---------- inițializare automată ----------
+  // <div data-mvhd-mut="ID" data-cover="1"></div>            previzualizare fără sunet
+  // <div data-mvhd-play="ID" data-titlu="..."></div>          imagine + buton; la apăsare pornește playerul HD
+  function initFacade(box){
+    if (box._mvhdF) return; box._mvhdF = 1;
+    var id = box.getAttribute('data-mvhd-play'), titlu = box.getAttribute('data-titlu') || '';
+    box.classList.add('mvhd-box');
+    if (getComputedStyle(box).position === 'static') box.style.position = 'relative';
+    if (!box.style.aspectRatio && !box.clientHeight) box.style.aspectRatio = '16/9';
+    var m4f = mp4De(id); box.innerHTML = '<img src="' + (m4f ? m4f.poster : 'https://i.ytimg.com/vi/' + id + '/maxresdefault.jpg') + '" onload="if(this.naturalWidth&lt;=120&&this.src.indexOf(&#39;maxres&#39;)>-1)this.src=this.src.replace(&#39;maxresdefault&#39;,&#39;hqdefault&#39;)" onerror="if(this.src.indexOf(&#39;maxres&#39;)>-1)this.src=this.src.replace(&#39;maxresdefault&#39;,&#39;hqdefault&#39;)" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;">' +
+      '<button type="button" class="mvhd-mare" aria-label="' + TXT.play + (titlu ? ': ' + titlu.replace(/"/g, '') : '') + '" style="display:flex">' + I.play + '</button>';
+    box.querySelector('button').addEventListener('click', function(){
+      box.innerHTML = ''; box._mvhdP = null;
+      player(box, id, { autoplay: true, titlu: titlu });
+      if (window.mvInc) try { window.mvInc('film_' + id); } catch(e){}
+    });
+  }
+  function scan(root){
+    if (!root || !root.querySelectorAll) return;
+    Array.prototype.forEach.call(root.querySelectorAll('[data-mvhd-mut]'), function(b){ mut(b, b.getAttribute('data-mvhd-mut'), b.getAttribute('data-cover') === '1'); });
+    Array.prototype.forEach.call(root.querySelectorAll('[data-mvhd-play]'), initFacade);
+  }
+  function porneste(){
+    scan(document);
+    new MutationObserver(function(ms){ ms.forEach(function(m){ Array.prototype.forEach.call(m.addedNodes, function(n){ if (n.nodeType === 1) { if (n.hasAttribute && (n.hasAttribute('data-mvhd-mut') || n.hasAttribute('data-mvhd-play'))) scan(n.parentNode); else scan(n); } }); }); })
+      .observe(document.body, { childList: true, subtree: true });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', porneste); else porneste();
+
+  function idDin(u){ var m = String(u || '').match(/(?:youtu\.be\/|v=|embed\/|shorts\/)([A-Za-z0-9_-]{6,})/); return m ? m[1] : (/^[A-Za-z0-9_-]{11}$/.test(String(u || '')) ? u : ''); }
+  return { mut: mut, player: player, scan: scan, id: idDin };
+})();
+</script>
